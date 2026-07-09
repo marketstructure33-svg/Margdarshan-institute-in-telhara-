@@ -20,6 +20,20 @@ export default function AdminAILab({ onBack }: { onBack?: () => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  const [apiKey, setApiKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchApiKey = async () => {
+      const keysRef = doc(db, 'Settings', 'apiKeys');
+      const keysSnap = await getDoc(keysRef);
+      if (keysSnap.exists()) {
+        setApiKey(keysSnap.data().adminApiKey || null);
+      }
+    };
+    fetchApiKey();
+  }, []);
+
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -95,6 +109,7 @@ export default function AdminAILab({ onBack }: { onBack?: () => void }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          apiKey: apiKey,
           messages: [...messages, newUserMessage].map(m => {
              // simplified for /api/gemini-chat compatibility
              return {

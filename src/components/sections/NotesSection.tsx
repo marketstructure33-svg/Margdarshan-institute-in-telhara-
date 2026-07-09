@@ -25,6 +25,20 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const [apiKey, setApiKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchApiKey = async () => {
+      const keysRef = doc(db, 'Settings', 'apiKeys');
+      const keysSnap = await getDoc(keysRef);
+      if (keysSnap.exists()) {
+        setApiKey(keysSnap.data().userPlannerApiKey || null);
+      }
+    };
+    fetchApiKey();
+  }, []);
+
   const [activeTab, setActiveTab] = useState<'class' | 'personal'>('class');
   
   const [quizNote, setQuizNote] = useState<StudyMaterial | any | null>(null);
@@ -167,7 +181,8 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
         },
         body: JSON.stringify({
           noteContent: note.content,
-          title: note.title
+          title: note.title,
+          apiKey: apiKey
         }),
       });
 
@@ -201,6 +216,7 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
         body: JSON.stringify({
           noteContent: note.content,
           title: note.title,
+          apiKey: apiKey,
           subject: selectedSubject
         }),
       });

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { User } from 'firebase/auth';
 import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+
 import { Notice } from '../../types';
 import { Send, Paperclip, Loader2, Bot, User as UserIcon, X, Image as ImageIcon } from 'lucide-react';
 
@@ -25,6 +25,20 @@ export default function NoticeChatSection({ user }: { user: User }) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const [apiKey, setApiKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchApiKey = async () => {
+      const keysRef = doc(db, 'Settings', 'apiKeys');
+      const keysSnap = await getDoc(keysRef);
+      if (keysSnap.exists()) {
+        setApiKey(keysSnap.data().userChatApiKey || null);
+      }
+    };
+    fetchApiKey();
+  }, []);
+
 
   useEffect(() => {
     // Fetch notices
@@ -94,6 +108,7 @@ export default function NoticeChatSection({ user }: { user: User }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          apiKey: apiKey,
           messages: chatMessages,
           systemInstruction: 'You are the Margdarshan AI Tutor, an intelligent and helpful virtual assistant for students. Provide accurate, encouraging, and clear answers.'
         })

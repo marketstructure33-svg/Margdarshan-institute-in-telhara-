@@ -1,4 +1,9 @@
 import { useState } from 'react';
+
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
+import { useEffect } from 'react';
+
 import { Loader2, Sparkles, Calendar, BookOpen } from 'lucide-react';
 import Markdown from 'react-markdown';
 
@@ -12,6 +17,20 @@ export default function AIStudyPlannerSection({ selectedClass, selectedSubject }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [apiKey, setApiKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchApiKey = async () => {
+      const keysRef = doc(db, 'Settings', 'apiKeys');
+      const keysSnap = await getDoc(keysRef);
+      if (keysSnap.exists()) {
+        setApiKey(keysSnap.data().userPlannerApiKey || null);
+      }
+    };
+    fetchApiKey();
+  }, []);
+
+
   const generateSchedule = async () => {
     setLoading(true);
     setError(null);
@@ -21,7 +40,7 @@ export default function AIStudyPlannerSection({ selectedClass, selectedSubject }
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ selectedClass, selectedSubject }),
+        body: JSON.stringify({ selectedClass, selectedSubject, apiKey }),
       });
 
       if (!response.ok) {
