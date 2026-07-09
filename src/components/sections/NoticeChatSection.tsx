@@ -1,6 +1,7 @@
+import { db } from '../../lib/firebase';
 import { useState, useRef, useEffect } from 'react';
 import { User } from 'firebase/auth';
-import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, limit, doc, getDoc } from 'firebase/firestore';
 
 import { Notice } from '../../types';
 import { Send, Paperclip, Loader2, Bot, User as UserIcon, X, Image as ImageIcon } from 'lucide-react';

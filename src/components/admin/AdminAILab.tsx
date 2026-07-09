@@ -1,3 +1,5 @@
+import { db } from '../../lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { useState, useRef, useEffect } from 'react';
 import { Bot, User, Send, Paperclip, Loader2, Sparkles, X, ArrowLeft } from 'lucide-react';
 import Markdown from 'react-markdown';

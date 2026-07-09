@@ -6,7 +6,7 @@ import { StudyMaterial } from '../../types';
 import { FileType, Loader2, ChevronDown, ChevronUp, Search, Printer, BrainCircuit, X, Mic, MicOff, Plus, BookOpen, MessageSquare, FileText } from 'lucide-react';
 import { recordRecentView } from '../../lib/tracking';
 import Markdown from 'react-markdown';
-import { addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { addDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
 
 interface Note {
   id: string;
