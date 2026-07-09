@@ -39,18 +39,29 @@ export default function AIStudyPlannerSection({ selectedClass, selectedSubject }
         throw new Error("API Key is missing. Please contact admin to configure it.");
       }
       
-      const response = await fetch('/api/study-planner', {
+      const prompt = `Generate a personalized, structured 7-day study schedule for a student in ${selectedClass} studying ${selectedSubject}. 
+       Include specific topics to cover each day, practical exercises, and review sessions. 
+       Format the response in clean Markdown with clear headings and bullet points.`;
+
+      
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ selectedClass, selectedSubject, apiKey }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          tools: [{ googleSearch: {} }]
+        })
       });
+    
+
       if (!response.ok) {
-        throw new Error('Failed to generate study schedule');
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error?.message || "Failed to generate study schedule");
       }
+
       const data = await response.json();
-      setSchedule(data.schedule);
+      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      setSchedule(replyText);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {

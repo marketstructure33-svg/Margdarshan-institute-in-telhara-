@@ -108,22 +108,37 @@ export default function NoticeChatSection({ user }: { user: User }) {
         throw new Error("API Key is missing. Please contact admin to configure it.");
       }
       
-      const res = await fetch('/api/gemini-chat', {
+      const formattedMessages = chatMessages.map((m: any) => {
+        const parts: any[] = [];
+        if (m.text) parts.push({ text: m.text });
+        if (m.image) {
+          let base64Data = m.image;
+          if (base64Data.includes(',')) base64Data = base64Data.split(',')[1];
+          parts.push({ inlineData: { data: base64Data, mimeType: m.imageType || 'image/jpeg' } });
+        }
+        return { role: m.role === 'model' ? 'model' : 'user', parts };
+      });
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          apiKey: apiKey,
-          messages: chatMessages,
-          systemInstruction: 'You are a helpful AI assistant for the Margdarshan Institute notice board. Answer questions clearly based on the provided context.'
+          contents: formattedMessages,
+          systemInstruction: { parts: [{ text: 'You are a helpful AI assistant for the Margdarshan Institute notice board. Answer questions clearly based on the provided context.' }] }
         })
       });
-      
-      if (!res.ok) throw new Error("Failed to get response");
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error?.message || "Failed to get response");
+      }
+
       const data = await res.json();
+      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response.";
 
       setMessages(prev => [...prev, { 
          role: 'model', 
-         text: data.text || "I couldn't generate a response."
+         text: replyText
       }]);
     } catch (error) {
       console.warn("AI Error:", error);

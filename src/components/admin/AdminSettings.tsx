@@ -210,7 +210,7 @@ export default function AdminSettings() {
           
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Admin Panel (Research) API Key</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Admin Panel (Research) API Key (e.g., Gemini, ChatGPT, Claude)</label>
               <input 
                 type="text" 
                 value={adminApiKey}
@@ -221,7 +221,7 @@ export default function AdminSettings() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">User Panel (AI Chat) API Key</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">User Panel (AI Chat) API Key (e.g., Gemini, ChatGPT, Claude)</label>
               <input 
                 type="text" 
                 value={userChatApiKey}
@@ -232,7 +232,7 @@ export default function AdminSettings() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">User Panel (Study Planner & Tutor) API Key</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">User Panel (Study Planner & Tutor) API Key (e.g., Gemini, ChatGPT, Claude)</label>
               <input 
                 type="text" 
                 value={userPlannerApiKey}
