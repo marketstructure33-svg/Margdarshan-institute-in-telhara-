@@ -1,0 +1,6 @@
+{
+  "name": "Margdarshan Institute",
+  "description": "Student portal and administration dashboard for Margdarshan Institute, featuring PDF materials, notes, profile management, and AI Chat.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
