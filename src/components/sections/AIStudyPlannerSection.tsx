@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { doc, getDoc } from 'firebase/firestore';
+import { GoogleGenAI } from '@google/genai';
 import { db } from '../../lib/firebase';
 import { useEffect } from 'react';
 
@@ -35,19 +36,21 @@ export default function AIStudyPlannerSection({ selectedClass, selectedSubject }
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/study-planner', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ selectedClass, selectedSubject, apiKey }),
+      if (!apiKey) {
+        throw new Error("API Key is missing. Please contact admin to configure it.");
+      }
+      
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `Generate a personalized, structured 7-day study schedule for a student in ${selectedClass} studying ${selectedSubject}. 
+       Include specific topics to cover each day, practical exercises, and review sessions. 
+       Format the response in clean Markdown with clear headings and bullet points.`;
+      
+      const res = await ai.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: prompt,
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate study schedule');
-      }
-
-      const data = await response.json();
+      const data = { schedule: res.text };
       setSchedule(data.schedule);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');

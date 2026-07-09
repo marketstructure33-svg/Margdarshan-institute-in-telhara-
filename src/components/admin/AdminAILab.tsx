@@ -105,26 +105,38 @@ export default function AdminAILab({ onBack }: { onBack?: () => void }) {
       // Let's modify /api/gemini-chat to accept parts properly, but since we already have the endpoint, let's format it.
       // We pass messages to /api/gemini-chat
       
-      const res = await fetch('/api/gemini-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          apiKey: apiKey,
-          messages: [...messages, newUserMessage].map(m => {
-             // simplified for /api/gemini-chat compatibility
-             return {
-                 role: m.role,
-                 text: m.text,
-                 image: m.base64Images?.[0]?.data,
-                 imageType: m.base64Images?.[0]?.mimeType
-             };
-          }),
-          systemInstruction: 'You are an Executive AI assistant for school administration.'
-        })
+      if (!apiKey) {
+        throw new Error("API Key is missing. Please configure it in the Admin Settings.");
+      }
+      const ai = new GoogleGenAI({ apiKey });
+      
+      const formattedMessages = [...messages, newUserMessage].map(m => {
+          const parts: any[] = [];
+          if (m.text) parts.push({ text: m.text });
+          if (m.base64Images?.[0]) {
+              let base64Data = m.base64Images[0].data;
+              if (base64Data.includes(',')) {
+                  base64Data = base64Data.split(',')[1];
+              }
+              parts.push({
+                  inlineData: {
+                      data: base64Data,
+                      mimeType: m.base64Images[0].mimeType
+                  }
+              });
+          }
+          return { role: m.role === 'model' ? 'model' : 'user', parts };
       });
 
-      if (!res.ok) throw new Error("Failed to generate response");
-      const data = await res.json();
+      const response = await ai.models.generateContent({
+          model: 'gemini-1.5-flash',
+          contents: formattedMessages,
+          config: {
+              systemInstruction: 'You are an Executive AI assistant for school administration.'
+          }
+      });
+      
+      const data = { text: response.text };
 
       setMessages(prev => [...prev, { 
          role: 'model', 

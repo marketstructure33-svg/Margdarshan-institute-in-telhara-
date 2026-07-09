@@ -174,19 +174,23 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
     setGeneratingQuiz(true);
 
     try {
-      const response = await fetch('/api/generate-quiz', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          noteContent: note.content,
-          title: note.title,
-          apiKey: apiKey
-        }),
+      if (!apiKey) {
+        throw new Error("API Key is missing. Please contact admin to configure it.");
+      }
+      
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `Based on the following class notes titled "${note.title}", generate a 5-question multiple choice practice quiz.
+    Format the output in clean Markdown. Include an answer key at the very bottom.
+    
+    Class Notes:
+    ${note.content}`;
+      
+      const res = await ai.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: prompt,
       });
 
-      const data = await response.json();
+      const data = { quiz: res.text };
       
       if (!response.ok) {
         throw new Error(data.error || 'Failed to generate quiz');
@@ -208,20 +212,22 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
     setGeneratingTutor(true);
 
     try {
-      const response = await fetch('/api/ai-tutor', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          noteContent: note.content,
-          title: note.title,
-          apiKey: apiKey,
-          subject: selectedSubject
-        }),
+      if (!apiKey) {
+        throw new Error("API Key is missing. Please contact admin to configure it.");
+      }
+      
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `Act as an AI Tutor for ${note.subject}. Based on the following class notes titled "${note.title}", provide a clear, subject-specific explanation of the key concepts and 3 practical study tips to master this material. Format the output in clean Markdown.
+
+    Class Notes:
+    ${note.content}`;
+      
+      const res = await ai.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: prompt,
       });
 
-      const data = await response.json();
+      const data = { explanation: res.text };
       
       if (!response.ok) {
         throw new Error(data.error || 'Failed to get tutor explanation');
