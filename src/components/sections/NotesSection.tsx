@@ -172,17 +172,16 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
     setQuizNote(note);
     setQuizContent('');
     setGeneratingQuiz(true);
-
     try {
       if (!apiKey) {
         throw new Error("API Key is missing. Please contact admin to configure it.");
       }
       
-      const prompt = `Act as an AI Tutor for ${note.subject}. Based on the following class notes titled "${note.title}", provide a clear, subject-specific explanation of the key concepts and 3 practical study tips to master this material. Format the output in clean Markdown.
-
+      const prompt = `Based on the following class notes titled "${note.title}", generate a 5-question multiple choice practice quiz.
+    Format the output in clean Markdown. Include an answer key at the very bottom.
+    
     Class Notes:
     ${note.content}`;
-
       
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
@@ -192,24 +191,60 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
           tools: [{ googleSearch: {} }]
         })
       });
-    
+      
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error?.message || "Failed to generate quiz");
+      }
+      
+      const data = await response.json();
+      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      
+      setQuizContent(replyText);
+    } catch (error: any) {
+      console.error('Quiz Generation Error:', error);
+      alert(error.message || 'Failed to generate quiz. Please try again.');
+    } finally {
+      setGeneratingQuiz(false);
+    }
+  };
 
+  const handleAITutor = async (note: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setTutorNote(note);
+    setTutorContent('');
+    setGeneratingTutor(true);
+    try {
+      if (!apiKey) {
+        throw new Error("API Key is missing. Please contact admin to configure it.");
+      }
+      
+      const prompt = `Act as an AI Tutor for ${note.subject}. Based on the following class notes titled "${note.title}", provide a clear, subject-specific explanation of the key concepts and 3 practical study tips to master this material. Format the output in clean Markdown.
+
+    Class Notes:
+    ${note.content}`;
+      
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          tools: [{ googleSearch: {} }]
+        })
+      });
+      
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         throw new Error(errData.error?.message || "Failed to get tutor explanation");
       }
-
+      
       const data = await response.json();
       const replyTextTutor = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
       
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to get tutor explanation');
-      }
-      
       setTutorContent(replyTextTutor);
     } catch (error: any) {
-      console.error(error);
-      setTutorContent('Error generating tutor response. Please try again.');
+      console.error('AI Tutor Error:', error);
+      alert(error.message || 'Failed to get tutor explanation. Please try again.');
     } finally {
       setGeneratingTutor(false);
     }
