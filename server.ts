@@ -15,7 +15,7 @@ async function startServer() {
   app.post("/api/gemini-chat", async (req, res) => {
     try {
       const { messages, systemInstruction, temperature } = req.body;
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: req.body.apiKey || process.env.GEMINI_API_KEY });
       
       const formattedMessages = messages.map((msg: any) => {
         const parts: any[] = [];
@@ -57,7 +57,7 @@ async function startServer() {
     try {
       const { selectedClass, selectedSubject } = req.body;
       
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: req.body.apiKey || process.env.GEMINI_API_KEY });
       const prompt = `Generate a personalized, structured 7-day study schedule for a student in ${selectedClass} studying ${selectedSubject}. 
       Include specific topics to cover each day, practical exercises, and review sessions. 
       Format the response in clean Markdown with clear headings and bullet points.`;
@@ -79,7 +79,7 @@ async function startServer() {
     try {
       const { noteContent, title, subject } = req.body;
       
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: req.body.apiKey || process.env.GEMINI_API_KEY });
       const prompt = `Act as an AI Tutor for ${subject}. Based on the following class notes titled "${title}", provide a clear, subject-specific explanation of the key concepts and 3 practical study tips to master this material. Format the output in clean Markdown.
 
       Class Notes:
@@ -101,7 +101,7 @@ async function startServer() {
     try {
       const { noteContent, title } = req.body;
       
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: req.body.apiKey || process.env.GEMINI_API_KEY });
       const prompt = `Based on the following class notes titled "${title}", generate a 5-question multiple choice practice quiz.
       Format the output in clean Markdown. Include an answer key at the very bottom.
       

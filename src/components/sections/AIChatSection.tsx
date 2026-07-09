@@ -1,3 +1,5 @@
+import { db } from '../../lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { useState, useRef, useEffect } from 'react';
 import { User } from 'firebase/auth';
 import { Send, Paperclip, Loader2, Bot, User as UserIcon, X, ArrowLeft } from 'lucide-react';
@@ -19,6 +21,20 @@ export default function AIChatSection({ user, onBack }: { user: User, onBack?: (
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const [apiKey, setApiKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchApiKey = async () => {
+      const keysRef = doc(db, 'Settings', 'apiKeys');
+      const keysSnap = await getDoc(keysRef);
+      if (keysSnap.exists()) {
+        setApiKey(keysSnap.data().userChatApiKey || null);
+      }
+    };
+    fetchApiKey();
+  }, []);
+
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -73,21 +89,50 @@ export default function AIChatSection({ user, onBack }: { user: User, onBack?: (
         imageType: m.imageType
       }));
 
-      const res = await fetch('/api/gemini-chat', {
+      if (!apiKey) {
+        throw new Error("API Key is missing. Please contact admin to configure it.");
+      }
+      
+      const formattedMessages = chatMessages.map((m: any) => {
+        const parts: any[] = [];
+        if (m.text) parts.push({ text: m.text });
+        if (m.image) {
+          let base64Data = m.image;
+          if (base64Data.includes(',')) base64Data = base64Data.split(',')[1];
+          parts.push({ inlineData: { data: base64Data, mimeType: m.imageType || 'image/jpeg' } });
+        }
+        return { role: m.role === 'model' ? 'model' : 'user', parts };
+      });
+
+      
+      let modelToUse = 'gemini-3.5-flash';
+      const hasImages = formattedMessages.some(m => m.parts.some(p => p.inlineData));
+      if (hasImages) {
+        modelToUse = 'gemini-3.1-pro-preview';
+      }
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: chatMessages,
-          systemInstruction: 'You are the Margdarshan AI Tutor, an intelligent and helpful virtual assistant for students. Provide accurate, encouraging, and clear answers.'
+          contents: formattedMessages,
+          systemInstruction: { parts: [{ text: 'You are the Margdarshan AI Tutor, an intelligent and helpful virtual assistant for students. Provide accurate, encouraging, and clear answers.' }] },
+          tools: [{ googleSearch: {} }]
         })
       });
+    
 
-      if (!res.ok) throw new Error("Failed to get response");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error?.message || "Failed to get response");
+      }
+
       const data = await res.json();
+      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response.";
 
       setMessages(prev => [...prev, { 
          role: 'model', 
-         text: data.text || "I couldn't generate a response."
+         text: replyText
       }]);
     } catch (error) {
       console.warn("AI Error:", error);

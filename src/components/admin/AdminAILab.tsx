@@ -1,3 +1,5 @@
+import { db } from '../../lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { useState, useRef, useEffect } from 'react';
 import { Bot, User, Send, Paperclip, Loader2, Sparkles, X, ArrowLeft } from 'lucide-react';
 import Markdown from 'react-markdown';
@@ -19,6 +21,20 @@ export default function AdminAILab({ onBack }: { onBack?: () => void }) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const [apiKey, setApiKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchApiKey = async () => {
+      const keysRef = doc(db, 'Settings', 'apiKeys');
+      const keysSnap = await getDoc(keysRef);
+      if (keysSnap.exists()) {
+        setApiKey(keysSnap.data().adminApiKey || null);
+      }
+    };
+    fetchApiKey();
+  }, []);
+
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -91,29 +107,52 @@ export default function AdminAILab({ onBack }: { onBack?: () => void }) {
       // Let's modify /api/gemini-chat to accept parts properly, but since we already have the endpoint, let's format it.
       // We pass messages to /api/gemini-chat
       
-      const res = await fetch('/api/gemini-chat', {
+      if (!apiKey) {
+        throw new Error("API Key is missing. Please configure it in the Admin Settings.");
+      }
+      
+      const formattedMessages = [...messages, newUserMessage].map(m => {
+        const parts: any[] = [];
+        if (m.text) parts.push({ text: m.text });
+        if (m.base64Images) {
+          m.base64Images.forEach(img => {
+            let base64Data = img.data;
+            if (base64Data.includes(',')) base64Data = base64Data.split(',')[1];
+            parts.push({ inlineData: { data: base64Data, mimeType: img.mimeType } });
+          });
+        }
+        return { role: m.role === 'model' ? 'model' : 'user', parts };
+      });
+
+      
+      let modelToUse = 'gemini-3.5-flash';
+      const hasImages = formattedMessages.some(m => m.parts.some(p => p.inlineData));
+      if (hasImages) {
+        modelToUse = 'gemini-3.1-pro-preview';
+      }
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, newUserMessage].map(m => {
-             // simplified for /api/gemini-chat compatibility
-             return {
-                 role: m.role,
-                 text: m.text,
-                 image: m.base64Images?.[0]?.data,
-                 imageType: m.base64Images?.[0]?.mimeType
-             };
-          }),
-          systemInstruction: 'You are an Executive AI assistant for school administration.'
+          contents: formattedMessages,
+          systemInstruction: { parts: [{ text: 'You are an Executive AI assistant for school administration.' }] },
+          tools: [{ googleSearch: {} }]
         })
       });
+    
 
-      if (!res.ok) throw new Error("Failed to generate response");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error?.message || "Failed to get response");
+      }
+
       const data = await res.json();
+      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response.";
 
       setMessages(prev => [...prev, { 
          role: 'model', 
-         text: data.text || "I couldn't generate a response."
+         text: replyText
       }]);
     } catch (error) {
       console.warn("AI Error:", error);

@@ -1,4 +1,9 @@
 import { useState } from 'react';
+
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
+import { useEffect } from 'react';
+
 import { Loader2, Sparkles, Calendar, BookOpen } from 'lucide-react';
 import Markdown from 'react-markdown';
 
@@ -12,24 +17,51 @@ export default function AIStudyPlannerSection({ selectedClass, selectedSubject }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [apiKey, setApiKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchApiKey = async () => {
+      const keysRef = doc(db, 'Settings', 'apiKeys');
+      const keysSnap = await getDoc(keysRef);
+      if (keysSnap.exists()) {
+        setApiKey(keysSnap.data().userPlannerApiKey || null);
+      }
+    };
+    fetchApiKey();
+  }, []);
+
+
   const generateSchedule = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/study-planner', {
+      if (!apiKey) {
+        throw new Error("API Key is missing. Please contact admin to configure it.");
+      }
+      
+      const prompt = `Generate a personalized, structured 7-day study schedule for a student in ${selectedClass} studying ${selectedSubject}. 
+       Include specific topics to cover each day, practical exercises, and review sessions. 
+       Format the response in clean Markdown with clear headings and bullet points.`;
+
+      
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ selectedClass, selectedSubject }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          tools: [{ googleSearch: {} }]
+        })
       });
+    
 
       if (!response.ok) {
-        throw new Error('Failed to generate study schedule');
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error?.message || "Failed to generate study schedule");
       }
 
       const data = await response.json();
-      setSchedule(data.schedule);
+      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      setSchedule(replyText);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
