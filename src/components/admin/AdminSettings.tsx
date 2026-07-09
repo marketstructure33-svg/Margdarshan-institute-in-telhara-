@@ -12,11 +12,6 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
-
-  const [adminApiKey, setAdminApiKey] = useState('');
-  const [userChatApiKey, setUserChatApiKey] = useState('');
-  const [userPlannerApiKey, setUserPlannerApiKey] = useState('');
-
   
   
   const [success, setSuccess] = useState('');
@@ -33,15 +28,6 @@ export default function AdminSettings() {
         const data = docSnap.data();
         if (data.logoUrl) setLogoUrl(data.logoUrl);
         if (data.bannerUrl) setBannerUrl(data.bannerUrl);
-      }
-      
-      const keysRef = doc(db, 'Settings', 'apiKeys');
-      const keysSnap = await getDoc(keysRef);
-      if (keysSnap.exists()) {
-        const data = keysSnap.data();
-        if (data.adminApiKey) setAdminApiKey(data.adminApiKey);
-        if (data.userChatApiKey) setUserChatApiKey(data.userChatApiKey);
-        if (data.userPlannerApiKey) setUserPlannerApiKey(data.userPlannerApiKey);
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
@@ -90,13 +76,6 @@ export default function AdminSettings() {
       await setDoc(doc(db, 'Settings', 'appSettings'), {
         logoUrl,
         bannerUrl,
-        updatedAt: Date.now()
-      }, { merge: true });
-      
-      await setDoc(doc(db, 'Settings', 'apiKeys'), {
-        adminApiKey,
-        userChatApiKey,
-        userPlannerApiKey,
         updatedAt: Date.now()
       }, { merge: true });
       setSuccess('Settings saved successfully!');
@@ -193,53 +172,6 @@ export default function AdminSettings() {
                 </label>
               </div>
               
-            </div>
-          </div>
-        </div>
-
-        
-        <hr className="border-slate-100" />
-        
-        {/* API Keys Section */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-bold flex items-center gap-2">
-            <Settings className="w-5 h-5 text-slate-500" />
-            AI API Keys Configuration
-          </h3>
-          <p className="text-sm text-slate-500">Add your Gemini API Keys here. These keys will be used dynamically.</p>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Admin Panel (Research) API Key (e.g., Gemini, ChatGPT, Claude)</label>
-              <input 
-                type="text" 
-                value={adminApiKey}
-                onChange={(e) => setAdminApiKey(e.target.value)}
-                placeholder="AIzaSy..."
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-red-500 focus:ring-4 focus:ring-red-50 outline-none transition-all"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">User Panel (AI Chat) API Key (e.g., Gemini, ChatGPT, Claude)</label>
-              <input 
-                type="text" 
-                value={userChatApiKey}
-                onChange={(e) => setUserChatApiKey(e.target.value)}
-                placeholder="AIzaSy..."
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-red-500 focus:ring-4 focus:ring-red-50 outline-none transition-all"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">User Panel (Study Planner & Tutor) API Key (e.g., Gemini, ChatGPT, Claude)</label>
-              <input 
-                type="text" 
-                value={userPlannerApiKey}
-                onChange={(e) => setUserPlannerApiKey(e.target.value)}
-                placeholder="AIzaSy..."
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-red-500 focus:ring-4 focus:ring-red-50 outline-none transition-all"
-              />
             </div>
           </div>
         </div>
