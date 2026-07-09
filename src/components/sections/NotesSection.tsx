@@ -178,56 +178,20 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
         throw new Error("API Key is missing. Please contact admin to configure it.");
       }
       
-      const ai = new GoogleGenAI({ apiKey });
-      const prompt = `Based on the following class notes titled "${note.title}", generate a 5-question multiple choice practice quiz.
-    Format the output in clean Markdown. Include an answer key at the very bottom.
-    
-    Class Notes:
-    ${note.content}`;
-      
-      const res = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
-        contents: prompt,
+      const response = await fetch('/api/ai-tutor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          noteContent: note.content,
+          title: note.title,
+          subject: note.subject,
+          apiKey: apiKey
+        }),
       });
-
-      const data = { quiz: res.text };
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate quiz');
-      }
-      
-      setQuizContent(data.quiz);
-    } catch (error: any) {
-      console.error(error);
-      setQuizContent('Error generating quiz. Please try again.');
-    } finally {
-      setGeneratingQuiz(false);
-    }
-  };
-
-  const handleAITutor = async (note: any, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setTutorNote(note);
-    setTutorContent('');
-    setGeneratingTutor(true);
-
-    try {
-      if (!apiKey) {
-        throw new Error("API Key is missing. Please contact admin to configure it.");
-      }
-      
-      const ai = new GoogleGenAI({ apiKey });
-      const prompt = `Act as an AI Tutor for ${note.subject}. Based on the following class notes titled "${note.title}", provide a clear, subject-specific explanation of the key concepts and 3 practical study tips to master this material. Format the output in clean Markdown.
-
-    Class Notes:
-    ${note.content}`;
-      
-      const res = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
-        contents: prompt,
-      });
-
-      const data = { explanation: res.text };
+      if (!response.ok) throw new Error("Failed to get response");
+      const data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.error || 'Failed to get tutor explanation');

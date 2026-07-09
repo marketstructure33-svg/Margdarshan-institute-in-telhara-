@@ -90,35 +90,19 @@ export default function AIChatSection({ user, onBack }: { user: User, onBack?: (
       if (!apiKey) {
         throw new Error("API Key is missing. Please contact admin to configure it.");
       }
-      const ai = new GoogleGenAI({ apiKey });
       
-      const formattedMessages = chatMessages.map((m: any) => {
-          const parts: any[] = [];
-          if (m.text) parts.push({ text: m.text });
-          if (m.image) {
-              let base64Data = m.image;
-              if (base64Data.includes(',')) {
-                  base64Data = base64Data.split(',')[1];
-              }
-              parts.push({
-                  inlineData: {
-                      data: base64Data,
-                      mimeType: m.imageType || 'image/jpeg'
-                  }
-              });
-          }
-          return { role: m.role === 'model' ? 'model' : 'user', parts };
-      });
-
-      const response = await ai.models.generateContent({
-          model: 'gemini-1.5-flash',
-          contents: formattedMessages,
-          config: {
-              systemInstruction: 'You are the Margdarshan AI Tutor, an intelligent and helpful virtual assistant for students. Provide accurate, encouraging, and clear answers.'
-          }
+      const res = await fetch('/api/gemini-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey: apiKey,
+          messages: chatMessages,
+          systemInstruction: 'You are the Margdarshan AI Tutor, an intelligent and helpful virtual assistant for students. Provide accurate, encouraging, and clear answers.'
+        })
       });
       
-      const data = { text: response.text };
+      if (!res.ok) throw new Error("Failed to get response");
+      const data = await res.json();
 
       setMessages(prev => [...prev, { 
          role: 'model', 

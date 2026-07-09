@@ -108,35 +108,26 @@ export default function AdminAILab({ onBack }: { onBack?: () => void }) {
       if (!apiKey) {
         throw new Error("API Key is missing. Please configure it in the Admin Settings.");
       }
-      const ai = new GoogleGenAI({ apiKey });
       
-      const formattedMessages = [...messages, newUserMessage].map(m => {
-          const parts: any[] = [];
-          if (m.text) parts.push({ text: m.text });
-          if (m.base64Images?.[0]) {
-              let base64Data = m.base64Images[0].data;
-              if (base64Data.includes(',')) {
-                  base64Data = base64Data.split(',')[1];
-              }
-              parts.push({
-                  inlineData: {
-                      data: base64Data,
-                      mimeType: m.base64Images[0].mimeType
-                  }
-              });
-          }
-          return { role: m.role === 'model' ? 'model' : 'user', parts };
-      });
-
-      const response = await ai.models.generateContent({
-          model: 'gemini-1.5-flash',
-          contents: formattedMessages,
-          config: {
-              systemInstruction: 'You are an Executive AI assistant for school administration.'
-          }
+      const finalChatMessages = [...messages, newUserMessage].map(m => ({
+          role: m.role,
+          text: m.text,
+          image: m.base64Images?.[0]?.data,
+          imageType: m.base64Images?.[0]?.mimeType
+      }));
+      
+      const res = await fetch('/api/gemini-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey: apiKey,
+          messages: finalChatMessages,
+          systemInstruction: 'You are an Executive AI assistant for school administration.'
+        })
       });
       
-      const data = { text: response.text };
+      if (!res.ok) throw new Error("Failed to get response");
+      const data = await res.json();
 
       setMessages(prev => [...prev, { 
          role: 'model', 
