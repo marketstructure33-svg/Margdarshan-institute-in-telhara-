@@ -22,6 +22,8 @@ const NAV_ITEMS = [
   { id: 'pdf', label: 'P.D.F' },
   { id: 'notes', label: 'Notes' },
   { id: 'planner', label: 'AI Study Planner' },
+  { id: 'livetutor', label: 'Live Tutor' },
+  { id: 'analytics', label: 'Analytics' },
   { id: 'notice', label: 'Notices' },
   { id: 'ai_chat', label: 'AI Tutor' },
   { id: 'admin_chat', label: 'Abhishek Bhaiya Chat' },

@@ -8,6 +8,8 @@ import AIChatSection from './sections/AIChatSection';
 import AdminChatSection from './sections/AdminChatSection';
 import ProfileSection from './sections/ProfileSection';
 import AIStudyPlannerSection from './sections/AIStudyPlannerSection';
+import { AnalyticsSection } from './sections/AnalyticsSection';
+import { LiveTutorSection } from './sections/LiveTutorSection';
 
 interface UserPanelProps {
   user: User;
@@ -72,6 +74,14 @@ export default function UserPanel({ user, activeTab, setActiveTab, setIsAdminAut
           <AdminChatSection user={user} />
         )}
         
+        {activeTab === 'livetutor' && (
+          <LiveTutorSection />
+        )}
+        
+        {activeTab === 'analytics' && (
+          <AnalyticsSection />
+        )}
+
         {activeTab === 'profile' && (
           <ProfileSection user={user} />
         )}
