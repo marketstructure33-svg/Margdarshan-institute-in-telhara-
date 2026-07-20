@@ -120,12 +120,17 @@ export default function NoticeChatSection({ user }: { user: User }) {
         return { role: m.role === 'model' ? 'model' : 'user', parts };
       });
 
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`, {
+      const res = await fetch('/api/gemini-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: formattedMessages,
-          systemInstruction: { parts: [{ text: 'You are a helpful AI assistant for the Margdarshan Institute notice board. Answer questions clearly based on the provided context.' }] }
+          messages: formattedMessages.map(m => {
+            const out: any = { role: m.role };
+            if (m.parts[0]?.text) out.text = m.parts[0].text;
+            return out;
+          }),
+          systemInstruction: 'You are a helpful AI assistant for the Margdarshan Institute notice board. Answer questions clearly based on the provided context.',
+          apiKey
         })
       });
 

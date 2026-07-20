@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
-import { FileText, FileType, Upload, Loader2, CheckCircle2, Bell, FilePlus, Link } from 'lucide-react';
+import { FileText, FileType, Upload, Loader2, CheckCircle2, Bell, FilePlus, Link, Youtube } from 'lucide-react';
 
 
 const CLASSES = ['Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12', 'Competitive'];
@@ -23,7 +23,7 @@ const withTimeout = <T,>(promise: Promise<T>, ms: number, errorMessage: string):
 };
 
 export default function AdminPdfNotesMaker() {
-  const [type, setType] = useState<'PDF' | 'CreatePDF' | 'Note' | 'Notice'>('PDF');
+  const [type, setType] = useState<'PDF' | 'CreatePDF' | 'Note' | 'Notice' | 'Video'>('PDF');
   const [targetClass, setTargetClass] = useState('Class 10');
   const [subject, setSubject] = useState('Mathematics');
   const [title, setTitle] = useState('');
@@ -36,8 +36,8 @@ export default function AdminPdfNotesMaker() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (type === 'PDF' && !pdfLink) {
-      alert("Please enter a valid PDF or Google Drive link.");
+    if ((type === 'PDF' || type === 'Video') && !pdfLink) {
+      alert("Please enter a valid link.");
       return;
     }
     if ((type === 'CreatePDF' || type === 'Note' || type === 'Notice') && !content) {
@@ -66,9 +66,9 @@ export default function AdminPdfNotesMaker() {
             class: targetClass,
             subject,
             title,
-            content: (type === 'Note' || type === 'CreatePDF') ? content : '',
-            fileUrl: type === 'PDF' ? pdfLink : '',
-            fileSize: type === 'PDF' ? 'Link' : '',
+            content: (type === 'Note' || type === 'CreatePDF' || type === 'Video') ? content : '',
+            fileUrl: (type === 'PDF' || type === 'Video') ? pdfLink : '',
+            fileSize: (type === 'PDF' || type === 'Video') ? 'Link' : '',
             uploadDate: Date.now()
           }),
           10000,
@@ -166,6 +166,12 @@ export default function AdminPdfNotesMaker() {
                 <Bell className={`w-5 h-5 ${type === 'Notice' ? 'text-red-500' : 'text-slate-400'}`} />
                 <span className="font-bold">Notice / Alert</span>
               </label>
+              <label className={`flex-1 flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${type === 'Video' ? 'border-red-500 bg-red-50 text-red-700' : 'border-slate-200 hover:bg-slate-50'}`}>
+                <input type="radio" name="type" value="Video" checked={type === 'Video'} onChange={() => setType('Video')} className="w-4 h-4 text-red-600 focus:ring-red-500" />
+                <Youtube className={`w-5 h-5 ${type === 'Video' ? 'text-red-500' : 'text-slate-400'}`} />
+                <span className="font-bold">Video</span>
+              </label>
+
             </div>
           </div>
           {type !== 'Notice' && (
@@ -195,22 +201,23 @@ export default function AdminPdfNotesMaker() {
               placeholder={type === 'Notice' ? "e.g. Holiday on Monday" : "e.g. Trigonometry Formulas Part 1"}
             />
           </div>
-          {(type === 'Note' || type === 'Notice' || type === 'CreatePDF') ? (
+          {(type === 'Note' || type === 'Notice' || type === 'CreatePDF' || type === 'Video') && (
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">
-                {type === 'Notice' ? 'Notice Details' : type === 'CreatePDF' ? 'P.D.F Content (Text)' : 'Note Content / Institutional Rules'}
+                {type === 'Notice' ? 'Notice Details' : type === 'CreatePDF' ? 'P.D.F Content (Text)' : type === 'Video' ? 'Video Description / Notes' : 'Note Content / Institutional Rules'}
               </label>
               <textarea 
                 value={content} 
                 onChange={(e) => setContent(e.target.value)} 
                 className="w-full h-48 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none font-sans resize-none"
                 required={type === 'Note' || type === 'Notice' || type === 'CreatePDF'}
-                placeholder={type === 'Notice' ? "Type announcement details..." : type === 'CreatePDF' ? "Type content to generate P.D.F..." : "Type your notes here..."}
+                placeholder={type === 'Notice' ? "Type announcement details..." : type === 'CreatePDF' ? "Type content to generate P.D.F..." : type === 'Video' ? "Type video description or summary..." : "Type your notes here..."}
               />
             </div>
-          ) : (
+          )}
+          {(type === 'PDF' || type === 'Video') && (
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">PDF Link (Google Drive, OneDrive, etc.)</label>
+              <label className="block text-sm font-bold text-slate-700 mb-1">{type === 'Video' ? 'YouTube Video Link' : 'PDF Link (Google Drive, etc.)'}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Link className="h-5 w-5 text-slate-400" />
@@ -221,11 +228,11 @@ export default function AdminPdfNotesMaker() {
                   onChange={(e) => setPdfLink(e.target.value)} 
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 focus:ring-2 focus:ring-red-500 outline-none font-medium"
                   required 
-                  placeholder="https://drive.google.com/file/d/..."
+                  placeholder={type === 'Video' ? "https://youtube.com/watch?v=..." : "https://drive.google.com/file/d/..."}
                 />
               </div>
               <p className="text-xs text-slate-500 mt-2">
-                Paste the sharing link of your PDF file hosted on Google Drive or any other cloud storage to avoid Firebase storage limits.
+                {type === 'Video' ? 'Paste the full YouTube URL (e.g. https://www.youtube.com/watch?v=...).' : 'Paste the sharing link of your PDF file hosted on Google Drive or any other cloud storage.'}
               </p>
             </div>
           )}

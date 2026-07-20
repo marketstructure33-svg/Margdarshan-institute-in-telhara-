@@ -28,7 +28,15 @@ export const recordRecentView = async (userId: string, material: StudyMaterial) 
         recentViews = recentViews.slice(0, 10);
       }
       
-      await updateDoc(userRef, { recentViews });
+      
+      // Track completion
+      let completedMaterials = data.completedMaterials || [];
+      if (!completedMaterials.includes(material.id)) {
+        completedMaterials.push(material.id);
+      }
+      
+      await updateDoc(userRef, { recentViews, completedMaterials });
+
     }
   } catch (error) {
     console.warn("Failed to record recent view", error);

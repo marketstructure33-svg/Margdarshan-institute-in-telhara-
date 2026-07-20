@@ -20,6 +20,8 @@ export type UserProfile = {
   address?: string;
   fatherName?: string;
   createdAt: number;
+  bookmarks?: string[];
+  completedMaterials?: string[];
 };
 
 export type ChatMessage = {
@@ -56,4 +58,14 @@ export type RecentView = {
   type: 'PDF' | 'Note' | 'CreatePDF';
   timestamp: number;
   url?: string;
+};
+
+export type VideoLecture = {
+  id: string;
+  title: string;
+  description: string;
+  youtubeUrl: string;
+  class: string;
+  subject: string;
+  uploadDate: number;
 };

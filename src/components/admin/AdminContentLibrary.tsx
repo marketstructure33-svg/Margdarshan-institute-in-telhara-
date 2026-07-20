@@ -3,14 +3,14 @@ import { collection, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase
 import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from '../../lib/firebase';
 import { StudyMaterial, Notice } from '../../types';
-import { FileText, FileType, Bell, Trash2, Loader2, Search } from 'lucide-react';
+import { FileText, FileType, Bell, Trash2, Loader2, Search, Youtube } from 'lucide-react';
 
 export default function AdminContentLibrary() {
   const [materials, setMaterials] = useState<StudyMaterial[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState<'all' | 'PDF' | 'Note' | 'Notice'>('all');
+  const [filter, setFilter] = useState<'all' | 'PDF' | 'Note' | 'Notice' | 'Video'>('all');
   const [itemToDelete, setItemToDelete] = useState(null);
 
   useEffect(() => {
@@ -91,6 +91,7 @@ export default function AdminContentLibrary() {
             <option value="all">All Types</option>
             <option value="PDF">P.D.Fs Only</option>
             <option value="Note">Notes Only</option>
+            <option value="Video">Videos Only</option>
             <option value="Notice">Notices Only</option>
           </select>
           
@@ -134,13 +135,15 @@ export default function AdminContentLibrary() {
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
                       item.type === 'PDF' ? 'bg-red-50 text-red-700 border border-red-200' :
-                      item.type === 'Note' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                      (item.type === 'Note' || item.type === 'CreatePDF') ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                      item.type === 'Video' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
                       'bg-purple-50 text-purple-700 border border-purple-200'
                     }`}>
                       {item.type === 'PDF' && <FileText className="w-3.5 h-3.5" />}
-                      {item.type === 'Note' && <FileType className="w-3.5 h-3.5" />}
+                      {(item.type === 'Note' || item.type === 'CreatePDF') && <FileType className="w-3.5 h-3.5" />}
+                      {item.type === 'Video' && <Youtube className="w-3.5 h-3.5" />}
                       {item.type === 'Notice' && <Bell className="w-3.5 h-3.5" />}
-                      {item.type}
+                      {item.type === 'CreatePDF' ? 'PDF (Generated)' : item.type}
                     </span>
                   </td>
                   <td className="px-6 py-4">

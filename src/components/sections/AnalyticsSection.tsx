@@ -46,11 +46,12 @@ export function AnalyticsSection() {
       3. Actionable study recommendations for parents and students.
       Format in clean Markdown.`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+      const response = await fetch('/api/analytics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }]
+          data: mockPerformanceData,
+          apiKey
         })
       });
 

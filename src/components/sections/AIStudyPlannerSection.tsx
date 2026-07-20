@@ -44,12 +44,13 @@ export default function AIStudyPlannerSection({ selectedClass, selectedSubject }
        Format the response in clean Markdown with clear headings and bullet points.`;
 
       
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+      const response = await fetch('/api/study-planner', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          tools: [{ googleSearch: {} }]
+          selectedClass,
+          selectedSubject,
+          apiKey
         })
       });
     
@@ -60,7 +61,7 @@ export default function AIStudyPlannerSection({ selectedClass, selectedSubject }
       }
 
       const data = await response.json();
-      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const replyText = data.schedule;
       setSchedule(replyText);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');

@@ -9,7 +9,11 @@ import AdminChatSection from './sections/AdminChatSection';
 import ProfileSection from './sections/ProfileSection';
 import AIStudyPlannerSection from './sections/AIStudyPlannerSection';
 import { AnalyticsSection } from './sections/AnalyticsSection';
+import { AIQuizSection } from './sections/AIQuizSection';
 import { LiveTutorSection } from './sections/LiveTutorSection';
+import { ScheduleCalendarSection } from './sections/ScheduleCalendarSection';
+import { VideoSection } from './sections/VideoSection';
+import { BookmarksSection } from './sections/BookmarksSection';
 
 interface UserPanelProps {
   user: User;
@@ -47,6 +51,19 @@ export default function UserPanel({ user, activeTab, setActiveTab, setIsAdminAut
           />
         )}
         
+        {activeTab === 'video' && (
+          <VideoSection 
+            user={user}
+            selectedClass={selectedClass} 
+            selectedSubject={selectedSubject} 
+          />
+        )}
+        {activeTab === 'bookmarks' && (
+          <BookmarksSection 
+            user={user}
+            setActiveTab={setActiveTab}
+          />
+        )}
         {activeTab === 'notes' && (
           <NotesSection 
             user={user}
@@ -78,8 +95,16 @@ export default function UserPanel({ user, activeTab, setActiveTab, setIsAdminAut
           <LiveTutorSection />
         )}
         
+        {activeTab === 'quiz' && (
+          <AIQuizSection selectedClass={selectedClass} selectedSubject={selectedSubject} />
+        )}
+
         {activeTab === 'analytics' && (
           <AnalyticsSection />
+        )}
+
+        {activeTab === 'schedule' && (
+          <ScheduleCalendarSection selectedClass={selectedClass} />
         )}
 
         {activeTab === 'profile' && (

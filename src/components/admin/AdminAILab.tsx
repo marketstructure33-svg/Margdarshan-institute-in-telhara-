@@ -131,17 +131,24 @@ export default function AdminAILab({ onBack }: { onBack?: () => void }) {
         modelToUse = 'gemini-3.1-pro-preview';
       }
 
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`, {
+      const res = await fetch('/api/gemini-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: formattedMessages,
-          systemInstruction: { parts: [{ text: 'You are an Executive AI assistant for school administration.' }] },
-          tools: [{ googleSearch: {} }]
+          messages: formattedMessages.map(m => {
+            const out: any = { role: m.role };
+            if (m.parts[0]?.text) out.text = m.parts[0].text;
+            if (m.parts[0]?.inlineData) {
+              out.image = m.parts[0].inlineData.data;
+              out.imageType = m.parts[0].inlineData.mimeType;
+            }
+            return out;
+          }),
+          systemInstruction: 'You are a helpful AI assistant.',
+          temperature: 0.7,
+          apiKey
         })
       });
-    
-
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error?.message || "Failed to get response");

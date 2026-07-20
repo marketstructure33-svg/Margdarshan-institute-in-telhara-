@@ -29,6 +29,7 @@
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-markdown": "^10.1.0",
+    "react-pdf": "^10.4.1",
     "recharts": "^3.9.2",
     "resend": "^6.17.1",
     "tailwind-merge": "^3.6.0",

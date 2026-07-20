@@ -25,6 +25,7 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const { bookmarks, toggleBookmark } = useBookmarks(user);
 
   const [apiKey, setApiKey] = useState<string | null>(null);
 
@@ -183,12 +184,14 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
     Class Notes:
     ${note.content}`;
       
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+      const response = await fetch(prompt.includes('practice quiz') ? '/api/generate-quiz' : '/api/ai-tutor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          tools: [{ googleSearch: {} }]
+          title: note.title,
+          noteContent: note.content,
+          subject: note.subject,
+          apiKey
         })
       });
       
@@ -224,12 +227,14 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
     Class Notes:
     ${note.content}`;
       
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+      const response = await fetch(prompt.includes('practice quiz') ? '/api/generate-quiz' : '/api/ai-tutor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          tools: [{ googleSearch: {} }]
+          title: note.title,
+          noteContent: note.content,
+          subject: note.subject,
+          apiKey
         })
       });
       
@@ -399,6 +404,14 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
                   >
                     <Printer className="w-5 h-5" />
                   </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); toggleBookmark(note.id); }}
+                    className={`p-2 rounded-full transition-colors ${bookmarks.includes(note.id) ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300'}`}
+                    title="Bookmark Note"
+                  >
+                    <Bookmark className={`w-4 h-4 ${bookmarks.includes(note.id) ? 'fill-current' : ''}`} />
+                  </button>
+
                   {activeTab === 'personal' && (
                     <button 
                       onClick={(e) => { e.stopPropagation(); setNoteToDelete(note.id); }}

@@ -12,8 +12,38 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json({ limit: '50mb' }));
+  app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
   // API Route for general Gemini Chat
+  
+  app.get("/api/proxy-pdf", async (req, res) => {
+    try {
+      let url = req.query.url;
+      if (!url || typeof url !== 'string') {
+        return res.status(400).send("Missing url parameter");
+      }
+      
+      // Handle Google Drive links
+      if (url.includes('drive.google.com')) {
+        const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          url = `https://drive.google.com/uc?export=download&id=${match[1]}`;
+        }
+      }
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        return res.status(response.status).send(response.statusText);
+      }
+      res.setHeader('Content-Type', 'application/pdf');
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      res.send(buffer);
+    } catch (e) {
+      res.status(500).send(e.message);
+    }
+  });
+
   app.post("/api/gemini-chat", async (req, res) => {
     try {
       const { messages, systemInstruction, temperature } = req.body;
@@ -55,6 +85,29 @@ async function startServer() {
   });
 
   // API Route for AI Study Planner
+  
+  app.post("/api/analytics", async (req, res) => {
+    try {
+      const { data } = req.body;
+      const ai = new GoogleGenAI({ apiKey: req.body.apiKey || process.env.GEMINI_API_KEY });
+      const prompt = `Act as an AI educational analyst. Analyze this student performance data: ${JSON.stringify(data)}.
+      Provide:
+      1. Predictive insights: What score are they likely to get next week?
+      2. Weak areas needing attention.
+      3. Actionable study recommendations for parents and students.
+      Format in clean Markdown.`;
+      
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: prompt,
+      });
+      res.json({ text: response.text });
+    } catch (error) {
+      console.error("Analytics Error:", error);
+      res.status(500).json({ error: error.message || "Failed to generate analytics insights." });
+    }
+  });
+
   app.post("/api/study-planner", async (req, res) => {
     try {
       const { selectedClass, selectedSubject } = req.body;

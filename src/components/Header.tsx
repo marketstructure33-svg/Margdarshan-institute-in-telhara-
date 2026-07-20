@@ -19,13 +19,17 @@ interface HeaderProps {
 
 const NAV_ITEMS = [
   { id: 'home', label: 'Home' },
+  { id: 'bookmarks', label: 'Bookmarks' },
+  { id: 'video', label: 'Videos' },
   { id: 'pdf', label: 'P.D.F' },
   { id: 'notes', label: 'Notes' },
   { id: 'planner', label: 'AI Study Planner' },
   { id: 'livetutor', label: 'Live Tutor' },
   { id: 'analytics', label: 'Analytics' },
+  { id: 'schedule', label: 'Schedule' },
   { id: 'notice', label: 'Notices' },
   { id: 'ai_chat', label: 'AI Tutor' },
+  { id: 'quiz', label: 'AI Quiz' },
   { id: 'admin_chat', label: 'Abhishek Bhaiya Chat' },
   { id: 'profile', label: 'Profile' },
 ];
@@ -42,13 +46,16 @@ export default function Header({
   toggleTheme
 }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [features, setFeatures] = useState({ pdf: true, notes: true, video: true, livetutor: true, analytics: true, schedule: true, quiz: true });
 
   const [appLogo, setAppLogo] = useState('/unnamed.png');
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'Settings', 'appSettings'), (docSnap) => {
-      if (docSnap.exists() && docSnap.data().logoUrl) {
-        setAppLogo(docSnap.data().logoUrl);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.logoUrl) setAppLogo(data.logoUrl);
+        if (data.features) setFeatures({ ...{ pdf: true, notes: true, video: true, livetutor: true, analytics: true, schedule: true, quiz: true }, ...data.features });
       } else {
         setAppLogo('/unnamed.png');
       }
@@ -56,6 +63,16 @@ export default function Header({
     return () => unsub();
   }, []);
 
+  const visibleNavItems = NAV_ITEMS.filter(item => {
+    if (item.id === 'pdf' && !features.pdf) return false;
+    if (item.id === 'notes' && !features.notes) return false;
+    if (item.id === 'video' && !features.video) return false;
+    if (item.id === 'livetutor' && !features.livetutor) return false;
+    if (item.id === 'analytics' && !features.analytics) return false;
+    if (item.id === 'schedule' && !features.schedule) return false;
+    if (item.id === 'quiz' && !features.quiz) return false;
+    return true;
+  });
 
   const handleSignOut = () => {
     signOut(auth);
@@ -83,7 +100,7 @@ export default function Header({
           {/* Desktop Navigation */}
           {currentView === 'user' && (
             <nav className="hidden md:flex space-x-1">
-              {NAV_ITEMS.map((item) => (
+              {visibleNavItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
@@ -149,7 +166,7 @@ export default function Header({
       {isMobileMenuOpen && (
         <div className="md:hidden bg-slate-800 border-t border-slate-700">
           <div className="px-2 pt-2 pb-3 space-y-1">
-            {currentView === 'user' ? NAV_ITEMS.map((item) => (
+            {currentView === 'user' ? visibleNavItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => {

@@ -1,17 +1,34 @@
+import { Document, Page, pdfjs } from 'react-pdf';
+import workerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 import { useState, useEffect, useMemo } from 'react';
 import { User } from 'firebase/auth';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { StudyMaterial } from '../../types';
-import { FileText, Loader2, Download, Eye, X, Search, Printer, ExternalLink } from 'lucide-react';
+import { FileText, Loader2, Download, Eye, X, Search, Printer, ExternalLink, Bookmark } from 'lucide-react';
+import { useBookmarks } from '../../hooks/useBookmarks';
 import { recordRecentView } from '../../lib/tracking';
 import { jsPDF } from 'jspdf';
+
+
+const getProxyUrl = (url: string) => {
+  if (url && url.startsWith('http')) {
+    return `/api/proxy-pdf?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+};
 
 export default function PdfSection({ user, selectedClass, selectedSubject }: { user?: User, selectedClass: string, selectedSubject: string }) {
   const [pdfs, setPdfs] = useState<StudyMaterial[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewPdfUrl, setViewPdfUrl] = useState<string | null>(null);
+  const [numPages, setNumPages] = useState<number>();
+  const [pageNumber, setPageNumber] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const { bookmarks, toggleBookmark } = useBookmarks(user);
 
   useEffect(() => {
     setLoading(true);
@@ -178,7 +195,7 @@ export default function PdfSection({ user, selectedClass, selectedSubject }: { u
                   <Printer className="w-4 h-4" /> Print
                 </button>
                 <button 
-                  onClick={() => setViewPdfUrl(null)}
+                  onClick={() => { setViewPdfUrl(null); setNumPages(undefined); }}
                   className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
                 >
                   <X className="w-6 h-6" />
@@ -186,11 +203,38 @@ export default function PdfSection({ user, selectedClass, selectedSubject }: { u
               </div>
             </div>
             <div className="flex-1 w-full bg-slate-200 dark:bg-slate-700">
-              <iframe 
-                src={`${viewPdfUrl}#toolbar=0`} 
-                className="w-full h-full border-none"
-                title="PDF Viewer"
-              />
+              <div className="flex-1 w-full overflow-y-auto bg-slate-200 dark:bg-slate-700 flex flex-col items-center p-4">
+              <Document
+                file={getProxyUrl(viewPdfUrl)}
+                onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                loading={
+                  <div className="flex items-center justify-center p-12 text-slate-500">
+                    <Loader2 className="w-8 h-8 animate-spin" />
+                    <span className="ml-3">Loading PDF...</span>
+                  </div>
+                }
+                error={
+                  <div className="bg-red-50 text-red-600 p-4 rounded-lg flex flex-col items-center">
+                    <p className="font-medium mb-2">Failed to load PDF.</p>
+                    <a href={viewPdfUrl} target="_blank" rel="noopener noreferrer" className="bg-red-100 hover:bg-red-200 px-4 py-2 rounded-md transition-colors text-sm font-semibold">
+                      Open PDF in new tab
+                    </a>
+                  </div>
+                }
+              >
+                {Array.from(new Array(numPages), (el, index) => (
+                  <div key={`page_${index + 1}`} className="mb-4 shadow-xl">
+                    <Page 
+                      pageNumber={index + 1} 
+                      renderTextLayer={true}
+                      renderAnnotationLayer={true}
+                      className="max-w-full"
+                      width={Math.min(window.innerWidth - 64, 800)}
+                    />
+                  </div>
+                ))}
+              </Document>
+            </div>
             </div>
           </div>
         </div>
