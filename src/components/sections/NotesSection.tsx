@@ -1,3 +1,5 @@
+import { Bookmark } from 'lucide-react';
+import { useBookmarks } from '../../hooks/useBookmarks';
 import { useState, useEffect, useMemo } from 'react';
 import { User } from 'firebase/auth';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
@@ -174,9 +176,7 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
     setQuizContent('');
     setGeneratingQuiz(true);
     try {
-      if (!apiKey) {
-        throw new Error("API Key is missing. Please contact admin to configure it.");
-      }
+      
       
       const prompt = `Based on the following class notes titled "${note.title}", generate a 5-question multiple choice practice quiz.
     Format the output in clean Markdown. Include an answer key at the very bottom.
@@ -201,7 +201,7 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
       }
       
       const data = await response.json();
-      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const replyText = data.quiz || data.explanation || "";
       
       setQuizContent(replyText);
     } catch (error: any) {
@@ -218,9 +218,7 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
     setTutorContent('');
     setGeneratingTutor(true);
     try {
-      if (!apiKey) {
-        throw new Error("API Key is missing. Please contact admin to configure it.");
-      }
+      
       
       const prompt = `Act as an AI Tutor for ${note.subject}. Based on the following class notes titled "${note.title}", provide a clear, subject-specific explanation of the key concepts and 3 practical study tips to master this material. Format the output in clean Markdown.
 
@@ -244,7 +242,7 @@ export default function NotesSection({ user, selectedClass, selectedSubject }: {
       }
       
       const data = await response.json();
-      const replyTextTutor = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const replyTextTutor = data.explanation || data.quiz || "";
       
       setTutorContent(replyTextTutor);
     } catch (error: any) {

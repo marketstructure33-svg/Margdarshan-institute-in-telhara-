@@ -5,11 +5,12 @@ import { UserProfile } from '../types';
 import { Users, FileText, FileType, MessageSquare, Trash2, Loader2, Sparkles, Plus, Mic, Send, Square, Bell, BarChart2, X } from 'lucide-react';
 import AdminPdfNotesMaker from './admin/AdminPdfNotesMaker';
 import AdminAILab from './admin/AdminAILab';
+import { AdminWhiteboard } from './admin/AdminWhiteboard';
 import AdminInbox from './admin/AdminInbox';
 import AdminContentLibrary from './admin/AdminContentLibrary';
 import AdminSettings from './admin/AdminSettings';
 import AdminScheduleMaker from './admin/AdminScheduleMaker';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Presentation } from 'lucide-react';
 
 export default function AdminPanel() {
   const [stats, setStats] = useState({ students: 0, pdfs: 0, notes: 0, chats: 0, notices: 0 });
@@ -107,6 +108,13 @@ export default function AdminPanel() {
           <Bell className="w-4 h-4" /> Schedule Events
         </button>
 
+
+        <button 
+          onClick={() => setActiveTab('whiteboard')}
+          className={`px-4 py-2 font-bold rounded-lg whitespace-nowrap transition-colors flex items-center gap-2 ${activeTab === 'whiteboard' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}
+        >
+          <Presentation className="w-4 h-4" /> Live Whiteboard
+        </button>
 <button 
           onClick={() => setActiveTab('library')}
           className={`px-4 py-2 font-bold rounded-lg whitespace-nowrap transition-colors flex items-center gap-2 ${activeTab === 'library' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}
@@ -238,6 +246,7 @@ export default function AdminPanel() {
       {activeTab === 'library' && <AdminContentLibrary />}
       {activeTab === 'inbox' && <AdminInbox students={students} />}
       {activeTab === 'settings' && <AdminSettings />}
+      {activeTab === 'whiteboard' && <AdminWhiteboard />}
 
       {viewingStudent && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">

@@ -107,9 +107,7 @@ export default function AdminAILab({ onBack }: { onBack?: () => void }) {
       // Let's modify /api/gemini-chat to accept parts properly, but since we already have the endpoint, let's format it.
       // We pass messages to /api/gemini-chat
       
-      if (!apiKey) {
-        throw new Error("API Key is missing. Please configure it in the Admin Settings.");
-      }
+      
       
       const formattedMessages = [...messages, newUserMessage].map(m => {
         const parts: any[] = [];
@@ -137,10 +135,12 @@ export default function AdminAILab({ onBack }: { onBack?: () => void }) {
         body: JSON.stringify({
           messages: formattedMessages.map(m => {
             const out: any = { role: m.role };
-            if (m.parts[0]?.text) out.text = m.parts[0].text;
-            if (m.parts[0]?.inlineData) {
-              out.image = m.parts[0].inlineData.data;
-              out.imageType = m.parts[0].inlineData.mimeType;
+            const textPart = m.parts.find((p: any) => p.text);
+            const imagePart = m.parts.find((p: any) => p.inlineData);
+            if (textPart) out.text = textPart.text;
+            if (imagePart) {
+              out.image = imagePart.inlineData.data;
+              out.imageType = imagePart.inlineData.mimeType;
             }
             return out;
           }),
@@ -155,7 +155,7 @@ export default function AdminAILab({ onBack }: { onBack?: () => void }) {
       }
 
       const data = await res.json();
-      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response.";
+      const replyText = data.text || "I couldn't generate a response.";
 
       setMessages(prev => [...prev, { 
          role: 'model', 
@@ -191,7 +191,7 @@ export default function AdminAILab({ onBack }: { onBack?: () => void }) {
             </div>
             <div>
               <h2 className="font-bold">Executive AI Research Lab</h2>
-              <p className="text-xs text-slate-400">Powered by Gemini Advanced</p>
+              <p className="text-xs text-slate-400">Powered by AI Advanced</p>
             </div>
           </div>
         </div>

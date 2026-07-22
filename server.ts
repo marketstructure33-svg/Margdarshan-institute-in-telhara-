@@ -68,6 +68,10 @@ async function startServer() {
         };
       });
 
+      while (formattedMessages.length > 0 && formattedMessages[0].role === 'model') {
+        formattedMessages.shift();
+      }
+
       const response = await ai.models.generateContent({
         model: "gemini-3.5-flash",
         contents: formattedMessages,
@@ -76,7 +80,6 @@ async function startServer() {
           temperature: temperature || 0.7
         }
       });
-
       res.json({ text: response.text });
     } catch (error: any) {
       console.error("AI Chat Error:", error);
@@ -97,6 +100,9 @@ async function startServer() {
       3. Actionable study recommendations for parents and students.
       Format in clean Markdown.`;
       
+      
+      
+      
       const response = await ai.models.generateContent({
         model: "gemini-3.5-flash",
         contents: prompt,
@@ -116,6 +122,9 @@ async function startServer() {
       const prompt = `Generate a personalized, structured 7-day study schedule for a student in ${selectedClass} studying ${selectedSubject}. 
       Include specific topics to cover each day, practical exercises, and review sessions. 
       Format the response in clean Markdown with clear headings and bullet points.`;
+      
+      
+      
       
       const response = await ai.models.generateContent({
         model: "gemini-3.5-flash",
@@ -140,6 +149,9 @@ async function startServer() {
       Class Notes:
       ${noteContent}`;
       
+      
+      
+      
       const response = await ai.models.generateContent({
         model: "gemini-3.5-flash",
         contents: prompt,
@@ -162,6 +174,9 @@ async function startServer() {
       
       Class Notes:
       ${noteContent}`;
+      
+      
+      
       
       const response = await ai.models.generateContent({
         model: "gemini-3.5-flash",
@@ -250,6 +265,18 @@ async function startServer() {
   });
 
   const wss = new WebSocketServer({ server, path: '/live' });
+
+  const whiteboardWss = new WebSocketServer({ server, path: '/whiteboard-sync' });
+  whiteboardWss.on("connection", (clientWs) => {
+    clientWs.on("message", (msg) => {
+      // Broadcast to all other clients
+      whiteboardWss.clients.forEach((client) => {
+        if (client !== clientWs && client.readyState === 1 /* OPEN */) {
+          client.send(msg);
+        }
+      });
+    });
+  });
   
   wss.on("connection", async (clientWs, req) => {
     try {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 import { User } from 'firebase/auth';
-import { Book, GraduationCap, ChevronRight, Clock, FileText, Download, Eye, Target } from 'lucide-react';
+import { Book, GraduationCap, ChevronRight, Clock, FileText, Download, Eye, Target, Presentation } from 'lucide-react';
 import { doc, getDoc, onSnapshot, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { RecentView } from '../../types';
@@ -325,12 +325,23 @@ export default function HomeSection({
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+        
+        <button 
+          onClick={() => setActiveTab('whiteboard')}
+          className="group bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-2xl text-left shadow-md hover:shadow-lg transition-all"
+        >
+          <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <Presentation className="w-6 h-6 text-white" />
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-200 transition-colors">Live Whiteboard</h3>
+          <p className="text-blue-100 text-sm">Join live interactive whiteboard classes.</p>
+        </button>
         {features.livetutor && (
         <button 
           onClick={() => setActiveTab('livetutor')}
           className="group bg-gradient-to-br from-indigo-600 to-indigo-700 p-6 rounded-2xl text-left shadow-md hover:shadow-lg transition-all"
         >
-          <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-200 transition-colors">Gemini Live Tutor</h3>
+          <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-200 transition-colors">AI Live Tutor</h3>
           <p className="text-indigo-100 text-sm mb-4">Talk real-time with an AI tutor.</p>
           <div className="flex items-center text-white text-sm font-bold uppercase tracking-wider">
             Start Live Session <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />

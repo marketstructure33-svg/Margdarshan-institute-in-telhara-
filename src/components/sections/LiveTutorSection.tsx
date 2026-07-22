@@ -85,16 +85,13 @@ export function LiveTutorSection() {
   };
 
   const startSession = async () => {
-    if (!apiKey) {
-      alert("API Key is missing. Please configure it in settings.");
-      return;
-    }
+    
 
     try {
       setStatus('Connecting to Live Tutor...');
       
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/live?apiKey=${apiKey}`;
+      const wsUrl = `${protocol}//${window.location.host}/live${apiKey ? "?apiKey=" + apiKey : ""}`;
       
       wsRef.current = new WebSocket(wsUrl);
 

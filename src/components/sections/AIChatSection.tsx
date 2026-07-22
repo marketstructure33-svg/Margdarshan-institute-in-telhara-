@@ -89,9 +89,7 @@ export default function AIChatSection({ user, onBack }: { user: User, onBack?: (
         imageType: m.imageType
       }));
 
-      if (!apiKey) {
-        throw new Error("API Key is missing. Please contact admin to configure it.");
-      }
+      
       
       const formattedMessages = chatMessages.map((m: any) => {
         const parts: any[] = [];
@@ -117,10 +115,12 @@ export default function AIChatSection({ user, onBack }: { user: User, onBack?: (
         body: JSON.stringify({
           messages: formattedMessages.map(m => {
             const out: any = { role: m.role };
-            if (m.parts[0]?.text) out.text = m.parts[0].text;
-            if (m.parts[0]?.inlineData) {
-              out.image = m.parts[0].inlineData.data;
-              out.imageType = m.parts[0].inlineData.mimeType;
+            const textPart = m.parts.find((p: any) => p.text);
+            const imagePart = m.parts.find((p: any) => p.inlineData);
+            if (textPart) out.text = textPart.text;
+            if (imagePart) {
+              out.image = imagePart.inlineData.data;
+              out.imageType = imagePart.inlineData.mimeType;
             }
             return out;
           }),
@@ -135,7 +135,7 @@ export default function AIChatSection({ user, onBack }: { user: User, onBack?: (
       }
 
       const data = await res.json();
-      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response.";
+      const replyText = data.text || "I couldn't generate a response.";
 
       setMessages(prev => [...prev, { 
          role: 'model', 
@@ -171,7 +171,7 @@ export default function AIChatSection({ user, onBack }: { user: User, onBack?: (
             </div>
             <div>
               <h2 className="font-bold">Margdarshan AI Tutor</h2>
-              <p className="text-xs text-slate-400">Powered by Gemini AI</p>
+              <p className="text-xs text-slate-400">Powered by AI</p>
             </div>
           </div>
         </div>

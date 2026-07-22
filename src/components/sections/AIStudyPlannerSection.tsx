@@ -35,9 +35,7 @@ export default function AIStudyPlannerSection({ selectedClass, selectedSubject }
     setLoading(true);
     setError(null);
     try {
-      if (!apiKey) {
-        throw new Error("API Key is missing. Please contact admin to configure it.");
-      }
+      
       
       const prompt = `Generate a personalized, structured 7-day study schedule for a student in ${selectedClass} studying ${selectedSubject}. 
        Include specific topics to cover each day, practical exercises, and review sessions. 

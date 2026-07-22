@@ -240,11 +240,11 @@ export default function AdminSettings() {
             <Settings className="w-5 h-5 text-slate-500" />
             AI API Keys Configuration
           </h3>
-          <p className="text-sm text-slate-500">Add your Gemini API Keys here. These keys will be used dynamically.</p>
+          <p className="text-sm text-slate-500">Add your AI API Keys here. These keys will be used dynamically.</p>
           
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Admin Panel (Research) API Key (e.g., Gemini, ChatGPT, Claude)</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Admin Panel (Research) API Key (e.g., ChatGPT, Claude)</label>
               <input 
                 type="text" 
                 value={adminApiKey}
@@ -255,7 +255,7 @@ export default function AdminSettings() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">User Panel (AI Chat) API Key (e.g., Gemini, ChatGPT, Claude)</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">User Panel (AI Chat) API Key (e.g., ChatGPT, Claude)</label>
               <input 
                 type="text" 
                 value={userChatApiKey}
@@ -266,7 +266,7 @@ export default function AdminSettings() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">User Panel (Study Planner & Tutor) API Key (e.g., Gemini, ChatGPT, Claude)</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">User Panel (Study Planner & Tutor) API Key (e.g., ChatGPT, Claude)</label>
               <input 
                 type="text" 
                 value={userPlannerApiKey}

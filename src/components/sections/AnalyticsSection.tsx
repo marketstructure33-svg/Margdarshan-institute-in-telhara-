@@ -33,10 +33,7 @@ export function AnalyticsSection() {
   }, []);
 
   const generateInsights = async () => {
-    if (!apiKey) {
-      alert("API Key is missing for Analytics.");
-      return;
-    }
+    
     setLoading(true);
     try {
       const prompt = `Act as an AI educational analyst. Analyze this student performance data: ${JSON.stringify(mockPerformanceData)}.
@@ -60,7 +57,7 @@ export function AnalyticsSection() {
       }
 
       const data = await response.json();
-      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const replyText = data.text || "";
       setInsights(replyText);
     } catch (error: any) {
       console.error(error);

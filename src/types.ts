@@ -1,6 +1,6 @@
 export type StudyMaterial = {
   id: string;
-  type: 'PDF' | 'Note' | 'CreatePDF';
+  type: 'PDF' | 'Note' | 'CreatePDF' | 'Video';
   class: string;
   subject: string;
   title: string;
@@ -55,7 +55,7 @@ export type PersonalNote = {
 export type RecentView = {
   id: string;
   title: string;
-  type: 'PDF' | 'Note' | 'CreatePDF';
+  type: 'PDF' | 'Note' | 'CreatePDF' | 'Video';
   timestamp: number;
   url?: string;
 };

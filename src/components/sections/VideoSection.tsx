@@ -45,7 +45,10 @@ export function VideoSection({ user, selectedClass, selectedSubject }: VideoSect
         id: video.id,
         title: video.title,
         type: 'Video',
-        url: video.fileUrl
+        fileUrl: video.fileUrl,
+        class: video.class,
+        subject: video.subject,
+        uploadDate: video.uploadDate
       });
     }
   };

@@ -1,3 +1,4 @@
+import { LiveWhiteboardSection } from './sections/LiveWhiteboardSection';
 import { useState } from 'react';
 import { User } from 'firebase/auth';
 import HomeSection from './sections/HomeSection';
@@ -107,6 +108,10 @@ export default function UserPanel({ user, activeTab, setActiveTab, setIsAdminAut
           <ScheduleCalendarSection selectedClass={selectedClass} />
         )}
 
+        
+        {activeTab === 'whiteboard' && (
+          <LiveWhiteboardSection />
+        )}
         {activeTab === 'profile' && (
           <ProfileSection user={user} />
         )}
