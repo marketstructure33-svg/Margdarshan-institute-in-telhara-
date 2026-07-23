@@ -264,9 +264,21 @@ async function startServer() {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 
-  const wss = new WebSocketServer({ server, path: '/live' });
-
-  const whiteboardWss = new WebSocketServer({ server, path: '/whiteboard-sync' });
+  const wss = new WebSocketServer({ noServer: true });
+  const whiteboardWss = new WebSocketServer({ noServer: true });
+  
+  server.on('upgrade', (request, socket, head) => {
+    const pathname = new URL(request.url || '', 'http://localhost').pathname;
+    if (pathname === '/live') {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request);
+      });
+    } else if (pathname === '/whiteboard-sync') {
+      whiteboardWss.handleUpgrade(request, socket, head, (ws) => {
+        whiteboardWss.emit('connection', ws, request);
+      });
+    }
+  });
   whiteboardWss.on("connection", (clientWs) => {
     clientWs.on("message", (msg) => {
       // Broadcast to all other clients
@@ -291,31 +303,42 @@ async function startServer() {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } },
           },
-          systemInstruction: "You are a helpful AI tutor for a student. Be concise, encouraging, and clear.",
+          systemInstruction: "You are a helpful AI tutor for a student. Be concise, encouraging, and clear. If the user shares their camera, you can see them.",
+          outputAudioTranscription: { },
+          inputAudioTranscription: { },
         },
         callbacks: {
           onmessage: (message) => {
             const audio = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
             if (audio) {
-              if (clientWs.readyState === 1) { // OPEN
+              if (clientWs.readyState === 1) { // OPEN 
                  clientWs.send(JSON.stringify({ audio }));
               }
             }
             if (message.serverContent?.interrupted) {
-              if (clientWs.readyState === 1) {
+              if (clientWs.readyState === 1) { 
                  clientWs.send(JSON.stringify({ interrupted: true }));
               }
             }
+            if (clientWs.readyState === 1) {
+              clientWs.send(JSON.stringify({ rawMessage: message }));
+            }
+          
           },
         },
       });
 
       clientWs.on("message", (data) => {
         try {
-          const { audio } = JSON.parse(data.toString());
+          const { audio, video } = JSON.parse(data.toString());
           if (audio) {
             session.sendRealtimeInput({
               audio: { data: audio, mimeType: "audio/pcm;rate=16000" },
+            });
+          }
+          if (video) {
+            session.sendRealtimeInput({
+              video: { data: video, mimeType: "image/jpeg" },
             });
           }
         } catch(e) {
